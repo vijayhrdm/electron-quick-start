@@ -1,4 +1,4 @@
-## Regression tests for R 3.[0-3].*
+## Regression tests for R 3.[0-3].*  _plus_ later modifications of these
 
 pdf("reg-tests-1c.pdf", encoding = "ISOLatin1.enc")
 .pt <- proc.time()
@@ -360,19 +360,19 @@ save(one, file = tempfile(), envir = my_env)
 
 ## Conversion to numeric in boundary case
 ch <- "0x1.ffa0000000001p-1"
-rr <- type.convert(ch, numerals = "allow.loss")
-rX <- type.convert(ch, numerals = "no.loss")
+rr <- type.convert(ch, numerals = "allow.loss", as.is=FALSE)
+rX <- type.convert(ch, numerals = "no.loss",    as.is=FALSE)
 stopifnot(is.numeric(rr), identical(rr, rX),
           all.equal(rr, 0.999267578125),
-	  all.equal(type.convert(ch,	      numerals = "warn"),
-		    type.convert("0x1.ffap-1",numerals = "warn"), tol = 5e-15))
+	  all.equal(type.convert(ch,	      numerals = "warn", as.is=FALSE),
+		    type.convert("0x1.ffap-1",numerals = "warn", as.is=FALSE), tol = 5e-15))
 ## type.convert(ch) was not numeric in R 3.1.0
 ##
 ch <- "1234567890123456789"
-rr <- type.convert(ch, numerals = "allow.loss")
-rX <- type.convert(ch, numerals = "no.loss")
-rx <- type.convert(ch, numerals = "no.loss", as.is = TRUE)
-tools::assertWarning(r. <- type.convert(ch, numerals = "warn.loss"))
+rr <- type.convert(ch, numerals = "allow.loss", as.is=FALSE)
+rX <- type.convert(ch, numerals = "no.loss",    as.is=FALSE)
+rx <- type.convert(ch, numerals = "no.loss",    as.is= TRUE)
+tools::assertWarning(r. <- type.convert(ch, numerals = "warn.loss", as.is=FALSE))
 stopifnot(is.numeric(rr), identical(rr, r.), all.equal(rr, 1.234567890e18),
 	  is.factor(rX),  identical(rx, ch))
 
@@ -1036,7 +1036,7 @@ for(mat in mat.l) {
     n.set <- if(nrow(mat) < 999) -3:3 else 0:3
     stopifnot(
         vapply(n.set, function(n) identCO (head(mat, n), headI(mat, n)), NA),
-        vapply(n.set, function(n) identCO (tail (mat, n, addrownums=FALSE),
+        vapply(n.set, function(n) identCO (tail (mat, n, keepnums=FALSE),
                                            tailI(mat, n)), NA),
         vapply(n.set, function(n) all.equal(tail(mat, n), tailI(mat, n),
                                             check.attributes=FALSE), NA))
@@ -1276,7 +1276,8 @@ stopifnot( # depends on contrasts:
 ## a 'use.na=TRUE' example
 dd <- data.frame(x1 = rep(letters[1:2], each=3),
                  x2 = rep(LETTERS[1:3], 2),
-                 y = rnorm(6))
+                 y = rnorm(6),
+                 stringsAsFactors = TRUE)
 dd[6,2] <- "B" # => no (b,C) combination => that coef should be NA
 fm3 <- lm(y ~ x1*x2, dd)
 (d3F <- dummy.coef(fm3, use.na=FALSE))
@@ -1562,23 +1563,33 @@ stopifnot(all.equal(Fn(t), t/5))
 ## In R <= 3.2.3,  NaN values resulted in something like (n-1)/n.
 
 
-## tar() default (i.e. "no files") behaviour:
+## PR#16716: tar() default (i.e. "no files") behaviour and regular 'files'
 doit <- function(...) {
     dir.create(td <- tempfile("tar-experi"))
     setwd(td)
     dfil <- "base_Desc"
     file.copy(system.file("DESCRIPTION"), dfil)
-    ## tar w/o specified files
+    ## tar w/o specified files (empty in R < 3.3.0)
     tar("ex.tar", ... ) # all files, i.e. 'dfil'
     unlink(dfil)
     stopifnot(grepl(dfil, untar("ex.tar", list = TRUE)))
     untar("ex.tar")
     myF2 <- c(dfil, "ex.tar")
     stopifnot(identical(list.files(), myF2))
+    ## tar with specified regular files (empty in R <= 4.0.2)
+    tar("ex2.tar", files = myF2, ...)
     unlink(myF2)
+    stopifnot(identical(untar("ex2.tar", list = TRUE), myF2))
+    untar("ex2.tar")
+    stopifnot(identical(list.files(), c(myF2, "ex2.tar")))
 }
-doit() # produced an empty tar file in R < 3.3.0, PR#16716
+doit()
+if(nzchar(Sys.getenv("tar"))) doit(tar = "internal")
 if(nzchar(Sys.which("tar"))) doit(tar = "tar")
+## internal tar silently ignored unused 'files' in R <= 4.0.2
+tools::assertWarning(verbose=TRUE,
+    tar(tempfile(fileext=".tar"), files = tempfile(), tar = "internal")
+)
 
 
 ## format.POSIXlt() of Jan.1 if  1941 or '42 is involved:
@@ -1597,7 +1608,8 @@ stopifnot(identical(w8, 141:142),# exactly 1941:1942 had CEST on Jan.1
 ## tsp<- did not remove mts class
 z <- ts(cbind(1:5,1:5))
 tsp(z) <- NULL
-stopifnot(identical(class(z), "matrix"))
+stopifnot(identical(c(FALSE,  TRUE),
+                    c("mts","matrix") %in% class(z)))
 ## kept "mts" in 3.2.4, PR#16769
 
 

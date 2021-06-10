@@ -1,6 +1,7 @@
 #### Regression tests for GRAPHICS & PLOTS
 
-pdf("reg-plot.pdf", paper="a4r", encoding ="ISOLatin1.enc", compress = FALSE)
+pdf("reg-plot.pdf", paper="a4r", encoding ="ISOLatin1.enc", compress = FALSE,
+    useDingbats = TRUE)
 
 ## since we supply the font metrics, the results depend only on
 ## the encoding used: Windows is different from Unix by default.
@@ -232,3 +233,13 @@ if(interactive()) # not regularly, where pdf is stored
 plotNchk(y74) # gives 3 warnings; 1. from pretty(): "very small range"
 plotNchk(y74[1:8]) # 3 warnings *and* no error anymore
 plotNchk(y74[1:2]) #    (ditto)
+
+
+## dotchart(*, pch=., groups=*) -- PR#16953
+## dotchart(*, ylab=.) for groups;
+g <- rep(1:3, each=2)
+dotchart(VADeaths[1:2, 1:3], color=g, pch=g,
+         ylab = "Grouping:  {Urbanity . Gender} x Age",
+         xaxt="n", frame.plot=FALSE)
+## now pch and colors match groups;
+## ylab placement; group (row) labels show again

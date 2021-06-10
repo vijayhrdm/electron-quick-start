@@ -1,7 +1,7 @@
 #
 # ----------------------------------------------
 
-***This is the first attempt to combine Electron with [R-Portable](https://sourceforge.net/projects/rportable/files/R-Portable/) (version 3.4.0) and [RStudio Shiny](https://cran.r-project.org/web/packages/shiny/index.html) package to deliver Electron Applications that run standalone with R and Shiny.***
+***Trying to combine Electron with [R-Portable](https://sourceforge.net/projects/rportable/files/R-Portable/) (version 4.1.0) and [RStudio Shiny](https://cran.r-project.org/web/packages/shiny/index.html) package to deliver Electron Applications that run standalone with R and Shiny. Trying to upgrade the R win and mac to make it work, lets see...***
 
 # ----------------------------------------------
 
@@ -29,7 +29,7 @@ To clone and run this repository you'll need [Git](https://git-scm.com) and [Nod
 
 ```bash
 # Clone this repository
-git clone https://github.com/ColumbusCollaboratory/electron-quick-start
+git clone https://github.com/vijayhrdm/electron-quick-start
 # Install Electron Packager (if first time)
 npm install electron-packager -g 
 # Go into the repository

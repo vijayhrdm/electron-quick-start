@@ -3,7 +3,7 @@
 pdf("reg-tests-1a.pdf", encoding = "ISOLatin1.enc")
 
 ## force standard handling for data frames
-options(stringsAsFactors=TRUE)
+options(stringsAsFactors=FALSE) # R >= 4.0.0
 ## .Machine
 (Meps <- .Machine$double.eps)# and use it in this file
 ## Facilitate diagnosing of testing startup:
@@ -87,7 +87,7 @@ stopifnot(range(z) == z,
 
 
 ## autoload
-stopifnot(ls("Autoloads") == ls(envir = .AutoloadEnv))
+stopifnot(ls("Autoloads") == ls(envir = .AutoloadEnv), allow.logical0=TRUE)
 ## end of moved from autoload.Rd
 
 
@@ -1235,9 +1235,9 @@ glm(y ~ 0, family = binomial)
 
 
 ## Integer overflow in type.convert
-res <- type.convert("12345689")
+res <- type.convert("12345689", as.is=FALSE)
 stopifnot(typeof(res) == "integer")
-res <- type.convert("12345689012")
+res <- type.convert("12345689012", as.is=FALSE)
 stopifnot(typeof(res) == "double")
 ##  Comments: was integer in 1.4.0
 
@@ -1575,7 +1575,7 @@ stopifnot(is.character(x$var))
 is.na(x[[1]]) <- 2
 stopifnot(is.character(x$var))
 
-x <- data.frame(var = LETTERS[1:3])
+x <- data.frame(var = factor(LETTERS[1:3]))
 x[[1]][2] <- "3"
 x
 stopifnot(is.factor(x$var))
@@ -1878,11 +1878,11 @@ stopifnot(identical(dimnames(z), dimnames(a)))
 ## internal conversion to factor in type.convert was not right
 ## if a character string NA was involved.
 x <- c(NA, "NA", "foo")
-(z <- type.convert(x))
+(z <- type.convert(x, as.is=FALSE))
 stopifnot(identical(levels(z), "foo"))
-(z <- type.convert(x, na.strings=character(0)))
+(z <- type.convert(x, na.strings=character(0), as.is=FALSE))
 stopifnot(identical(levels(z), sort(c("foo", "NA"))))
-(z <- type.convert(x, na.strings="foo"))
+(z <- type.convert(x, na.strings="foo", as.is=FALSE))
 stopifnot(identical(levels(z), "NA"))
 ## extra level in 1.6.1
 
@@ -1890,7 +1890,7 @@ stopifnot(identical(levels(z), "NA"))
 ## related example
 tmp <- tempfile()
 cat(c("1", "foo", "\n", "2", "NA", "\n"), file = tmp)
-(z <- read.table(tmp, na.strings="foo"))
+(z <- read.table(tmp, na.strings="foo", stringsAsFactors=TRUE))
 unlink(tmp)
 stopifnot(identical(levels(z$V2), "NA"),
 	  identical(is.na(z$V2), c(TRUE, FALSE)))
@@ -2052,26 +2052,26 @@ B <- data.frame(a=7:9, b=ordered(letters[7:9]))
 AB <- rbind(A,B)
 (cl <- sapply(AB, class))
 stopifnot(cl$b[1] == "ordered") # was factor in 1.6.2
-C <- data.frame(a=4:6, b=letters[4:6])
+C <- data.frame(a=4:6, b=factor(letters[4:6]))
 ABC <- rbind(AB, C)
 (cl <- sapply(ABC, class))
 stopifnot(cl[2] == "factor")
 
 A <- data.frame(a=1)
 A$b <- "A"
-B <- data.frame(a=2, b="B")
+B <- data.frame(a=2, b=factor("B"))
 (AB <- rbind(A,B))
 (cl <- sapply(AB, class))
 stopifnot(cl[2] == "character")
 
-A <- data.frame(a=1, b="A")
+A <- data.frame(a=1, b=factor("A"))
 B <- data.frame(a=2)
 B$b <- "B"
 (AB <- rbind(A,B))
 (cl <- sapply(AB, class))
 stopifnot(cl[2] == "factor")
-A <- data.frame(a=c("A", NA, "C"))
-B <- data.frame(a=c("B", NA, "C"))
+A <- data.frame(a=factor(c("A", NA, "C")))
+B <- data.frame(a=factor(c("B", NA, "C")))
 (AB <- rbind(A,B))
 stopifnot(levels(AB$a) == c("A", "C", "B"))
 A <- data.frame(a=I(c("A", NA, "C")))
@@ -2087,7 +2087,7 @@ B <- data.frame(a=2, b=I("B"))
 (cl <- sapply(AB, class))
 stopifnot(cl[2] == "character")
 
-A <- data.frame(a=1, b="A")
+A <- data.frame(a=1, b=factor("A"))
 B <- data.frame(a=2, b=I("B"))
 (AB <- rbind(A,B))
 (cl <- sapply(AB, class))
