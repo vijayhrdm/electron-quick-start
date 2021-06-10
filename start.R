@@ -14,7 +14,7 @@ gitVersion <- system("git --version", intern=TRUE)
 #if git not available, notify to install git
 
 #git clone electron-shiny sample app
-system("git clone https://github.com/ColumbusCollaboratory/electron-quick-start")
+system("git clone https://github.com/vijayhrdm/electron-quick-start")
 
 #copy app.R and all files
 subDir <- "temp"
